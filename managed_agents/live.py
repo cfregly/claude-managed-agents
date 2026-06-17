@@ -10,8 +10,11 @@ This is the honest proof that the surface works. Everything else in the repo is 
 of a request shape. Live mode needs ANTHROPIC_API_KEY and the Managed Agents beta on your org.
 """
 
+import uuid
+
 from .client import FAST_MODEL
 
+SMOKE_PREFIX = "claude-managed-agents-smoke"
 KICKOFF = "Run `echo managed-agents-ok` with bash and tell me the exact output, nothing else."
 
 
@@ -24,12 +27,14 @@ def _safe(label, fn, *args, **kwargs):
 
 
 def live_smoke(client) -> str:
+    # A unique tag per run, so a failed teardown never 409s the next run on the environment name.
+    tag = f"{SMOKE_PREFIX}-{uuid.uuid4().hex[:8]}"
     env = client.beta.environments.create(
-        name="claude-managed-agents-smoke",
+        name=tag,
         config={"type": "cloud", "networking": {"type": "unrestricted"}},
     )
     agent = client.beta.agents.create(
-        name="claude-managed-agents-smoke",
+        name=tag,
         model=FAST_MODEL,
         system="You are a terse shell assistant. Run exactly what is asked and report the output.",
         tools=[{"type": "agent_toolset_20260401", "default_config": {"enabled": True}}],
@@ -68,3 +73,39 @@ def live_smoke(client) -> str:
         f"agent reply: {text}\n"
         "teardown:\n" + "\n".join(teardown)
     )
+
+
+def cleanup(client) -> str:
+    """Sweep leftover smoke resources by name prefix.
+
+    A clean --live run tears itself down, but a crash between create and teardown can strand a
+    smoke agent (archivable, not deletable) or a smoke environment (whose unique name would 409
+    the next run). This archives stranded agents and deletes stranded environments, then reports
+    what it touched. Safe to run any time, even with nothing to clean.
+    """
+    archived = deleted = skipped = 0
+
+    for agent in client.beta.agents.list():
+        name = getattr(agent, "name", "") or ""
+        if not name.startswith(SMOKE_PREFIX):
+            continue
+        if getattr(agent, "archived_at", None):
+            skipped += 1
+            continue
+        try:
+            client.beta.agents.archive(agent.id)
+            archived += 1
+        except Exception:
+            skipped += 1
+
+    for env in client.beta.environments.list():
+        name = getattr(env, "name", "") or ""
+        if not name.startswith(SMOKE_PREFIX):
+            continue
+        try:
+            client.beta.environments.delete(env.id)
+            deleted += 1
+        except Exception:
+            skipped += 1
+
+    return f"cleanup: archived {archived} agent(s), deleted {deleted} environment(s), skipped {skipped}"

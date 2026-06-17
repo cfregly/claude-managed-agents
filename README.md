@@ -10,8 +10,13 @@ pip install -r requirements.txt
 
 python run.py                  # offline: every surface, as a dry run of its request shape
 python run.py memory_store     # one surface, dry run
-ANTHROPIC_API_KEY=... python run.py --live   # real env + agent + session, one turn, then teardown
+ANTHROPIC_API_KEY=... python run.py --live      # real env + agent + session, one turn, then teardown
+ANTHROPIC_API_KEY=... python run.py --cleanup   # sweep leftover smoke resources from a failed run
 ```
+
+The `--live` smoke names its environment and agent with a per-run suffix and tears them down at
+the end (sessions and environments delete, the agent is archived). If a run crashes mid-way,
+`--cleanup` archives any stranded smoke agents and deletes any stranded smoke environments.
 
 ## A note on honesty
 

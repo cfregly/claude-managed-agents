@@ -4,17 +4,18 @@
     python run.py                 # offline: every surface, as a dry run of its request shape
     python run.py memory_store    # one surface, dry run
     python run.py --live          # provision a real env + agent + session, run one turn, tear down
+    python run.py --cleanup       # archive/delete any leftover smoke resources from a failed run
 
-Default is the offline dry run, so no run provisions a real resource by accident. --live needs
-ANTHROPIC_API_KEY and the Managed Agents beta enabled on your org. After a run it writes a short
-receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
+Default is the offline dry run, so no run provisions a real resource by accident. --live and
+--cleanup need ANTHROPIC_API_KEY and the Managed Agents beta enabled on your org. After a run it
+writes a short receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
 """
 
 import sys
 from pathlib import Path
 
 from managed_agents.client import get_client, key_present
-from managed_agents.live import live_smoke
+from managed_agents.live import cleanup, live_smoke
 from managed_agents.surfaces import REGISTRY
 
 RECEIPT = Path(__file__).resolve().parent / "data" / "last_run.md"
@@ -31,7 +32,18 @@ def _write_receipt(label, mode):
 
 def main(argv):
     live = "--live" in argv
+    cleanup_only = "--cleanup" in argv
     names = _names(argv)
+
+    if cleanup_only:
+        if not key_present():
+            print("--cleanup needs ANTHROPIC_API_KEY and the Managed Agents beta on your org.")
+            return 2
+        client = get_client(live=True)
+        print("=== cleanup: sweep leftover claude-managed-agents-smoke resources ===")
+        print(cleanup(client))
+        _write_receipt("ran: cleanup sweep", "cleanup")
+        return 0
 
     if live:
         if not key_present():
