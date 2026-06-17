@@ -1,78 +1,47 @@
 #!/usr/bin/env python3
-"""One-command entry for the Managed Agents surface tour.
+"""One-command entry for the Managed Agents live smoke. Online only.
 
-    python run.py                 # offline: every surface, as a dry run of its request shape
-    python run.py memory_store    # one surface, dry run
-    python run.py --live          # provision a real env + agent + session, run one turn, tear down
-    python run.py --cleanup       # archive/delete any leftover smoke resources from a failed run
+    ANTHROPIC_API_KEY=... python run.py            # provision env + agent + session, run one turn, tear down
+    ANTHROPIC_API_KEY=... python run.py --cleanup  # sweep leftover smoke resources from a failed run
 
-Default is the offline dry run, so no run provisions a real resource by accident. --live and
---cleanup need ANTHROPIC_API_KEY and the Managed Agents beta enabled on your org. After a run it
-writes a short receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
+Requires ANTHROPIC_API_KEY and the Managed Agents beta on your org. Every run calls the real API.
+Without a key it fails fast with a clear error and a non-zero exit. There is no offline mode. The
+eleven surfaces are documented in the README; this script runs the real end-to-end smoke. After a
+run it writes a receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
 """
 
 import sys
 from pathlib import Path
 
-from managed_agents.client import get_client, key_present
+from managed_agents.client import get_client, require_key
 from managed_agents.live import cleanup, live_smoke
-from managed_agents.surfaces import REGISTRY
 
 RECEIPT = Path(__file__).resolve().parent / "data" / "last_run.md"
 
 
-def _names(argv):
-    return [a for a in argv if not a.startswith("-")]
-
-
-def _write_receipt(label, mode):
+def _write_receipt(label):
     RECEIPT.parent.mkdir(parents=True, exist_ok=True)
-    RECEIPT.write_text(f"# last run\n\nmode: {mode}\n{label}\n")
+    RECEIPT.write_text(f"# last run\n\n{label}\n")
 
 
 def main(argv):
-    live = "--live" in argv
-    cleanup_only = "--cleanup" in argv
-    names = _names(argv)
+    try:
+        require_key()
+    except RuntimeError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
 
-    if cleanup_only:
-        if not key_present():
-            print("--cleanup needs ANTHROPIC_API_KEY and the Managed Agents beta on your org.")
-            return 2
-        client = get_client(live=True)
+    client = get_client()
+
+    if "--cleanup" in argv:
         print("=== cleanup: sweep leftover claude-managed-agents-smoke resources ===")
         print(cleanup(client))
-        _write_receipt("ran: cleanup sweep", "cleanup")
+        _write_receipt("ran: cleanup sweep")
         return 0
 
-    if live:
-        if not key_present():
-            print("--live needs ANTHROPIC_API_KEY and the Managed Agents beta on your org.")
-            print("Run `python run.py` for the offline surface tour.")
-            return 2
-        client = get_client(live=True)
-        print("=== live end-to-end: environment -> agent -> session -> one turn -> teardown ===")
-        print(live_smoke(client))
-        _write_receipt("ran: live end-to-end smoke", "live")
-        return 0
-
-    if names:
-        unknown = [n for n in names if n not in REGISTRY]
-        if unknown:
-            print("unknown surface(s): " + ", ".join(unknown))
-            print("available: " + ", ".join(REGISTRY))
-            return 2
-        selected = names
-    else:
-        selected = list(REGISTRY)
-
-    for name in selected:
-        summary, fn = REGISTRY[name]
-        print(f"\n=== {name}  ({summary})  [dry] ===")
-        print(fn(None))
-
-    _write_receipt(f"surfaces: {len(selected)}", "dry")
-    print(f"\nshowed {len(selected)} surface(s) in dry mode. receipt: data/last_run.md")
+    print("=== live end-to-end: environment -> agent -> session -> one turn -> teardown ===")
+    print(live_smoke(client))
+    _write_receipt("ran: live end-to-end smoke")
     return 0
 
 

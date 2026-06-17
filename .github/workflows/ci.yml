@@ -12,5 +12,11 @@ jobs:
           python-version: "3.11"
       - name: deslop gate (README and CLAUDE.md)
         run: python scripts/deslop_check.py
-      - name: smoke run (offline dry run of every surface)
-        run: python run.py
+      - name: compile check
+        run: python -m compileall managed_agents run.py scripts
+      - name: fails fast without a key (non-zero exit)
+        run: |
+          if env -u ANTHROPIC_API_KEY python run.py; then
+            echo "run.py exited 0 without a key, expected non-zero"
+            exit 1
+          fi
