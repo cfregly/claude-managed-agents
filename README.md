@@ -1,11 +1,16 @@
 # claude-managed-agents
 
+[![ci](https://github.com/cfregly/claude-managed-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/cfregly/claude-managed-agents/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A runnable, honest tour of the **Managed Agents** surface. Managed Agents is the tier where
 Anthropic runs the agent loop and hosts a per-session container where the agent's tools execute.
 This repo runs one real end-to-end smoke against that surface and documents the eleven request
 shapes you compose to use it.
 
 ```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 
 ANTHROPIC_API_KEY=... python run.py            # provision a real env + agent + session, one turn, then teardown
@@ -18,6 +23,14 @@ with a clear error and a non-zero exit. There is no offline mode and no fallback
 its environment and agent with a per-run suffix and tears them down at the end (sessions and
 environments delete, the agent is archived). If a run crashes mid-way, `--cleanup` archives any
 stranded smoke agents and deletes any stranded smoke environments.
+
+## Verify it
+
+```bash
+python scripts/deslop_check.py
+python -m compileall managed_agents run.py scripts
+env -u ANTHROPIC_API_KEY python run.py  # should fail fast, non-zero
+```
 
 ## What the smoke does
 
