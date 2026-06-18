@@ -9,8 +9,8 @@ A runnable, honest tour of the Managed Agents surface. `run.py` runs one real en
 and the README documents the eleven request shapes you compose to use the full surface. Managed
 Agents ships under the `managed-agents-2026-04-01` beta.
 
-This is a standalone reference repo, a bonus alongside the six `claude-startup-*` repos, not one of
-them.
+This is a standalone reference repo, a platform deep-dive alongside the `claude-founder-kit` main
+kit, not part of it.
 
 ## Run it
 
