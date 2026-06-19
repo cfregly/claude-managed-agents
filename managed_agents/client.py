@@ -8,6 +8,14 @@ a clear error and a non-zero exit. There is no offline mode and no fallback. The
 """
 
 import os
+from pathlib import Path
+
+try:  # honor this repo's ignored .env without weakening the fail-fast path
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+except Exception:  # pragma: no cover - dotenv is a setup helper, not the runtime contract
+    pass
 
 # The smoke runs the agent on the fast tier to stay cheap. Managed Agents needs a Claude 4.5+ model.
 FAST_MODEL = "claude-haiku-4-5"
@@ -19,7 +27,7 @@ def require_key() -> None:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise RuntimeError(
             "ANTHROPIC_API_KEY is required (and the Managed Agents beta must be enabled on your "
-            "org). Set it, then run `ANTHROPIC_API_KEY=... python run.py`."
+            "org). Put it in .env or set it in the environment, then run `python run.py`."
         )
 
 

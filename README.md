@@ -29,7 +29,7 @@ stranded smoke agents and deletes any stranded smoke environments.
 ```bash
 python scripts/deslop_check.py
 python -m compileall managed_agents run.py scripts
-env -u ANTHROPIC_API_KEY python run.py  # should fail fast, non-zero
+env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py  # should fail fast, non-zero
 ```
 
 ## What the smoke does

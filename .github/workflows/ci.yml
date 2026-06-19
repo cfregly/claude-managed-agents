@@ -16,7 +16,7 @@ jobs:
         run: python -m compileall managed_agents run.py scripts
       - name: fails fast without a key (non-zero exit)
         run: |
-          if env -u ANTHROPIC_API_KEY python run.py; then
+          if env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py; then
             echo "run.py exited 0 without a key, expected non-zero"
             exit 1
           fi
