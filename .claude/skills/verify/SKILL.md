@@ -18,7 +18,8 @@ Verify the repo with these tools, in order. Do not stop until they pass.
    down). If it sweeps something, the teardown regressed.
 
 If no key is available, run the offline gates (steps 2 and 3) and confirm step 1 fails fast with
-the key-required message under `env -u ANTHROPIC_API_KEY python run.py`. Do not fake a run.
+the key-required message under `env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py`.
+Do not fake a run.
 
 If you hit a blocker, find a solution and update this skill for the future, so the next change
 verifies itself. This skill is meant to improve, not stay frozen.
