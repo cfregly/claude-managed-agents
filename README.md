@@ -29,6 +29,7 @@ stranded smoke agents and deletes any stranded smoke environments.
 ```bash
 python scripts/deslop_check.py
 python -m compileall managed_agents run.py scripts
+python -m unittest discover -s tests -q
 env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py  # should fail fast, non-zero
 ```
 
@@ -67,6 +68,7 @@ managed_agents/
   client.py    # the real client, key required, and model routing
   live.py      # the end-to-end smoke and the --cleanup sweep, with best-effort teardown
 run.py         # one-command entry: the live smoke, or --cleanup
+tests/         # offline parser tests
 scripts/       # the self-contained deslop gate for CI
 .claude/       # the verify skill and the Stop hook (skills + hooks, demonstrated)
 ```

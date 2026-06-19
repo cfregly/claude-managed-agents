@@ -10,6 +10,7 @@ eleven surfaces are documented in the README; this script runs the real end-to-e
 run it writes a receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -24,7 +25,21 @@ def _write_receipt(label):
     RECEIPT.write_text(f"# last run\n\n{label}\n")
 
 
+def parse_args(argv):
+    parser = argparse.ArgumentParser(
+        prog="run",
+        description="Run the Managed Agents live smoke or cleanup sweep.",
+    )
+    parser.add_argument(
+        "--cleanup",
+        action="store_true",
+        help="sweep leftover smoke resources from a failed run",
+    )
+    return parser.parse_args(argv)
+
+
 def main(argv):
+    args = parse_args(argv)
     try:
         require_key()
     except RuntimeError as e:
@@ -33,7 +48,7 @@ def main(argv):
 
     client = get_client()
 
-    if "--cleanup" in argv:
+    if args.cleanup:
         print("=== cleanup: sweep leftover claude-managed-agents-smoke resources ===")
         print(cleanup(client))
         _write_receipt("ran: cleanup sweep")

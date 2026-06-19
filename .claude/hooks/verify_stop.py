@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stop hook: ask Claude to run verification before it stops, if it hasn't already.
 
-"Already" means the receipt at data/last_run.md was refreshed recently, which the dry run does on
+"Already" means the receipt at data/last_run.md was refreshed recently, which a live run does on
 every run. If it is stale or missing, block the stop once with a reason pointing at the verify
 skill. Once `python run.py` has run, the receipt is fresh and the hook lets the agent stop, so it
 nudges without looping forever.
@@ -31,8 +31,9 @@ def main():
             {
                 "decision": "block",
                 "reason": (
-                    "Run the verify skill before stopping: `python run.py`, then "
-                    "`python scripts/deslop_check.py`. The receipt at data/last_run.md is stale or missing."
+                    "Run the verify skill before stopping: `python run.py`, then the offline gates "
+                    "(`python scripts/deslop_check.py`, compileall, unittest). "
+                    "The receipt at data/last_run.md is stale or missing."
                 ),
             }
         )

@@ -14,6 +14,8 @@ jobs:
         run: python scripts/deslop_check.py
       - name: compile check
         run: python -m compileall managed_agents run.py scripts
+      - name: offline unit tests
+        run: python -m unittest discover -s tests -q
       - name: fails fast without a key (non-zero exit)
         run: |
           if env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py; then

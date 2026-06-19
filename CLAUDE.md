@@ -31,5 +31,6 @@ kit, not part of it.
 - Claim only what runs. The smoke reports the real env, agent, session ids, the agent reply, and
   the teardown result. Nothing is simulated.
 - Prose is deslop-clean: no em-dashes, no en-dashes, no semicolons, no buzzwords. CI runs the
-  deslop gate on the README and this file, a compile check, and a fail-fast-without-a-key check.
+  deslop gate on the README and this file, a compile check, offline parser tests, and a
+  fail-fast-without-a-key check.
 - Never commit a key. `.env` stays git-ignored.
