@@ -24,6 +24,9 @@ its environment and agent with a per-run suffix and tears them down at the end (
 environments delete, the agent is archived). If a run crashes mid-way, `--cleanup` archives any
 stranded smoke agents and deletes any stranded smoke environments.
 
+The value bar is adversarially-confirmed to add value. A Managed Agents claim is shippable only when
+the workload, baseline or control path, skeptical check, and receipt-backed value survive review.
+
 ## Verify it
 
 ```bash
