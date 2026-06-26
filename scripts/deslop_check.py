@@ -9,14 +9,18 @@ import sys
 
 BANNED = {"—": "em-dash", "–": "en-dash", ";": "semicolon"}
 VALUE_BAR = "adversarially-confirmed to add value"
-VALUE_BAR_DOCS = ("README.md", "CLAUDE.md")
+VALUE_BAR_DOCS = ("README.md", "CLAUDE.md", "docs/confirmed-improvements.md")
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 def main():
     bad = []
-    for name in ("README.md", "CLAUDE.md"):
-        text = (ROOT / name).read_text()
+    for name in VALUE_BAR_DOCS:
+        path = ROOT / name
+        if not path.is_file():
+            bad.append(f"{name}: missing")
+            continue
+        text = path.read_text()
         for i, line in enumerate(text.splitlines(), 1):
             for ch, label in BANNED.items():
                 if ch in line:

@@ -36,6 +36,9 @@ python -m unittest discover -s tests -q
 env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py  # should fail fast, non-zero
 ```
 
+Confirmed improvements are tracked in [docs/confirmed-improvements.md](docs/confirmed-improvements.md).
+The current status is candidate.
+
 ## What the smoke does
 
 `run.py` provisions a real environment, a real agent, and a real session, sends one message,

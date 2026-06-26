@@ -33,6 +33,8 @@ kit, not part of it.
 - Apply the value bar. A Managed Agents claim is promoted only when it is adversarially-confirmed to add value:
   it names the workload, the baseline or alternative control path, the skeptical check,
   and the receipt-backed value of using the managed surface.
+- Keep `docs/confirmed-improvements.md` current. If a run does not clear the value bar, keep it as
+  candidate evidence instead of promoting it.
 - Prose is deslop-clean: no em-dashes, no en-dashes, no semicolons, no buzzwords. CI runs the
   deslop gate on the README and this file, a compile check, offline parser tests, and a
   fail-fast-without-a-key check.
