@@ -3,11 +3,12 @@
 
     ANTHROPIC_API_KEY=... python run.py            # provision env + agent + session, run one turn, tear down
     ANTHROPIC_API_KEY=... python run.py --cleanup  # sweep leftover smoke resources from a failed run
+    ANTHROPIC_API_KEY=... OPENAI_API_KEY=... GEMINI_API_KEY=... python run.py compare --live
 
-Requires ANTHROPIC_API_KEY and the Managed Agents beta on your org. Every run calls the real API.
-Without a key it fails fast with a clear error and a non-zero exit. There is no offline mode. The
-eleven surfaces are documented in the README; this script runs the real end-to-end smoke. After a
-run it writes a receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
+Requires ANTHROPIC_API_KEY and the Managed Agents beta on your org. The default smoke calls the
+real API. Without a key it fails fast with a clear error and a non-zero exit. The eleven surfaces are
+documented in the README. The compare mode has a dry path and a live provider path. After a run it
+writes a receipt to data/last_run.md, which the Stop hook checks before it lets an agent stop.
 """
 
 import argparse
@@ -35,11 +36,37 @@ def parse_args(argv):
         action="store_true",
         help="sweep leftover smoke resources from a failed run",
     )
+    subparsers = parser.add_subparsers(dest="command")
+    compare = subparsers.add_parser("compare", help="compare Managed Agents with other agent stacks")
+    compare.add_argument("--live", action="store_true", help="run live provider arms")
+    compare.add_argument(
+        "--providers",
+        default="managed,self-managed,openai,gemini",
+        help="comma-separated provider arms: managed,self-managed,openai,gemini",
+    )
+    compare.add_argument(
+        "--check",
+        action="store_true",
+        help="return non-zero unless every requested live arm succeeds",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv):
     args = parse_args(argv)
+    if args.command == "compare":
+        from managed_agents.compare import format_receipt, run_compare
+
+        receipt = run_compare(
+            providers=args.providers.split(","),
+            live=args.live,
+        )
+        print(format_receipt(receipt))
+        _write_receipt("ran: comparison harness")
+        if args.check and receipt["status"] != "mechanically vetted":
+            return 1
+        return 0
+
     try:
         require_key()
     except RuntimeError as e:

@@ -1,2 +1,4 @@
 anthropic>=0.92
 python-dotenv>=1.0
+openai-agents>=0.17.7
+google-adk>=2.3.0

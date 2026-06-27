@@ -17,12 +17,14 @@ kit, not part of it.
     pip install -r requirements.txt
     ANTHROPIC_API_KEY=... python run.py            # the live smoke, end to end
     ANTHROPIC_API_KEY=... python run.py --cleanup  # sweep leftover smoke resources
+    ANTHROPIC_API_KEY=... OPENAI_API_KEY=... GEMINI_API_KEY=... python run.py compare --live
 
 ## Rules
 
 - Key required, fail fast. Every run calls the real Managed Agents API, so `ANTHROPIC_API_KEY` is
   required and the beta must be enabled on your org. Without a key the run fails fast with a clear
-  error and a non-zero exit. There is no offline mode and no fallback.
+  error and a non-zero exit. The comparison mode can mark missing provider arms `held`, but it does
+  not promote a claim from a held arm.
 - Live cleans up after itself. The smoke names resources with a per-run suffix, deletes the session
   and environment, and archives the agent (agents have no delete). Teardown is best-effort and
   reports each step. `--cleanup` sweeps anything a crashed run stranded.
@@ -33,6 +35,10 @@ kit, not part of it.
 - Apply the value bar. A Managed Agents claim is promoted only when it is adversarially-confirmed to add value:
   it names the workload, the baseline or alternative control path, the skeptical check,
   and the receipt-backed value of using the managed surface.
+- Compare against competition. A promoted Managed Agents claim must run or source the same workload
+  against the strongest self-managed Claude loop, OpenAI agent stack, and Gemini agent stack. If a
+  provider path is app-owned orchestration rather than a hosted product, say that plainly and measure
+  the app-owned code, state, cleanup, and test burden.
 - Keep `docs/confirmed-improvements.md` current. If a run does not clear the value bar, keep it as
   candidate evidence instead of promoting it.
 - Prose is deslop-clean: no em-dashes, no en-dashes, no semicolons, no buzzwords. CI runs the

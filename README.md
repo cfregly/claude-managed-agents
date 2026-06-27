@@ -15,6 +15,7 @@ pip install -r requirements.txt
 
 ANTHROPIC_API_KEY=... python run.py            # provision a real env + agent + session, one turn, then teardown
 ANTHROPIC_API_KEY=... python run.py --cleanup  # sweep leftover smoke resources from a failed run
+ANTHROPIC_API_KEY=... OPENAI_API_KEY=... GEMINI_API_KEY=... python run.py compare --live
 ```
 
 This is a real tool. Every run calls the Managed Agents API, so `ANTHROPIC_API_KEY` is required
@@ -27,6 +28,17 @@ stranded smoke agents and deletes any stranded smoke environments.
 The value bar is adversarially-confirmed to add value. A Managed Agents claim is shippable only when
 the workload, baseline or control path, skeptical check, and receipt-backed value survive review.
 
+This is an Operations candidate, not a promoted feature hit yet. Promotion requires the same workload
+against a self-managed Claude loop, OpenAI's strongest current agent stack, and Gemini's strongest
+current agent stack. The claim has to measure hosted-loop value such as less orchestration code,
+cleaner teardown, durable session state, lower failure rate, or faster time to idle.
+
+`python run.py compare --live` runs that promotion gate. It uses one deterministic ops-triage
+workload across Claude Managed Agents, a self-managed Claude Messages tool loop, OpenAI Agents SDK,
+and Google ADK with Gemini. Each arm records model id, stack, status, latency, tool calls, correctness,
+failure reason, and teardown. Unsupported, missing, or inaccessible provider arms are marked `held`,
+not promoted.
+
 ## Verify it
 
 ```bash
@@ -34,6 +46,7 @@ python scripts/deslop_check.py
 python -m compileall managed_agents run.py scripts
 python -m unittest discover -s tests -q
 env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py  # should fail fast, non-zero
+env -u ANTHROPIC_API_KEY PYTHON_DOTENV_DISABLED=1 python run.py compare
 ```
 
 Confirmed improvements are tracked in [docs/confirmed-improvements.md](docs/confirmed-improvements.md).
@@ -44,6 +57,9 @@ The current status is candidate.
 `run.py` provisions a real environment, a real agent, and a real session, sends one message,
 streams the reply over SSE to idle, then tears everything down and reports each teardown step. It
 exercises the core path (agent lifecycle, environment, session, the event stream) end to end.
+
+`run.py compare --live` writes a local ignored receipt to `data/last_compare.json`. The receipt is
+for development review and can include provider response metadata, so it is not committed.
 
 ## The eleven surfaces (request-shape reference)
 
@@ -72,8 +88,9 @@ hooks feature demonstrating itself.
 ```
 managed_agents/
   client.py    # the real client, key required, and model routing
+  compare.py   # cross-stack comparison harness for the promotion gate
   live.py      # the end-to-end smoke and the --cleanup sweep, with best-effort teardown
-run.py         # one-command entry: the live smoke, or --cleanup
+run.py         # one-command entry: the live smoke, --cleanup, or compare
 tests/         # offline parser tests
 scripts/       # the self-contained deslop gate for CI
 .claude/       # the verify skill and the Stop hook (skills + hooks, demonstrated)
